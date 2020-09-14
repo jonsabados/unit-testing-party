@@ -82,35 +82,6 @@ func TestMapBirthYear(t *testing.T) {
 	}
 }
 
-func TestNewEmployeeGargabeAge(t *testing.T) {
-	asserter := assert.New(t)
-
-	mapBirthYear := func(birthYear int) Generation {
-		asserter.Fail("should not have reached this point")
-		return GenZ
-	}
-
-	input := RemoteEmployee{
-		Status: "blah",
-		Data: struct {
-			ID             string `json:"id"`
-			EmployeeName   string `json:"employee_name"`
-			EmployeeSalary string `json:"employee_salary"`
-			EmployeeAge    string `json:"employee_age"`
-			ProfileImage   string `json:"profile_image"`
-		}{
-			"1",
-			"Bob",
-			"123",
-			"NotANumber",
-			"foo",
-		},
-	}
-
-	_, err := NewEmployeeFactory(mapBirthYear)(&input)
-	asserter.EqualError(err, "strconv.Atoi: parsing \"NotANumber\": invalid syntax")
-}
-
 func TestNewEmployeeFactoryHappyPath(t *testing.T) {
 	asserter := assert.New(t)
 
@@ -123,17 +94,17 @@ func TestNewEmployeeFactoryHappyPath(t *testing.T) {
 
 	input := RemoteEmployee{
 		Status: "blah",
-		Data: struct {
-			ID             string `json:"id"`
+		Data: &struct {
+			ID             int    `json:"id"`
 			EmployeeName   string `json:"employee_name"`
-			EmployeeSalary string `json:"employee_salary"`
-			EmployeeAge    string `json:"employee_age"`
+			EmployeeSalary int    `json:"employee_salary"`
+			EmployeeAge    int    `json:"employee_age"`
 			ProfileImage   string `json:"profile_image"`
 		}{
-			"1",
+			1,
 			"Bob",
-			"123",
-			"20",
+			123,
+			20,
 			"foo",
 		},
 	}

@@ -2,20 +2,19 @@ package integration
 
 import (
 	"fmt"
-	"github.com/NYTimes/gizmo/server/kit"
-	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/publicsuffix"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/NYTimes/gizmo/server/kit"
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/publicsuffix"
 )
 
 func TestEmployeeEndpoint(t *testing.T) {
-	// we could fire up the server every test but the annoying first request fails always thing makes doing a single
-	// instance way more practical
 	cookieJar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
 		panic(err)
@@ -25,7 +24,7 @@ func TestEmployeeEndpoint(t *testing.T) {
 		HttpClient: &http.Client{
 			Transport:     nil,
 			CheckRedirect: nil,
-			Jar:           cookieJar, // the sample api were using always errors on the first request....
+			Jar:           cookieJar, // at one point in time the sample api were using always errored on the first request. Seems fixed now but retain cookies in case it resurrects itself.
 			Timeout:       0,
 		},
 	}
@@ -52,8 +51,6 @@ func TestEmployeeEndpoint(t *testing.T) {
 
 		return res.StatusCode, string(bytes)
 	}
-
-	doRequest("/employee/1")
 
 	testCases := []struct {
 		desc         string

@@ -28,11 +28,11 @@ const (
 
 type RemoteEmployee struct {
 	Status string `json:"status"`
-	Data   struct {
-		ID             string `json:"id"`
+	Data   *struct {
+		ID             int    `json:"id"`
 		EmployeeName   string `json:"employee_name"`
-		EmployeeSalary string `json:"employee_salary"`
-		EmployeeAge    string `json:"employee_age"`
+		EmployeeSalary int    `json:"employee_salary"`
+		EmployeeAge    int    `json:"employee_age"`
 		ProfileImage   string `json:"profile_image"`
 	} `json:"data"`
 }
@@ -68,11 +68,7 @@ func (s *SomeServer) EmployeeEndpoint(ctx context.Context, req interface{}) (int
 		return nil, kit.NewJSONStatusResponse(Error{err.Error()}, http.StatusInternalServerError)
 	}
 	defer res.Body.Close()
-	// 401 seems to be the response code from restapiexample for not found, wtf but OK
-	if res.StatusCode == http.StatusUnauthorized {
-		_, _ = ioutil.ReadAll(res.Body)
-		return nil, kit.NewJSONStatusResponse(Error{"employee not found"}, http.StatusNotFound)
-	} else if res.StatusCode != http.StatusOK {
+	if res.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(res.Body)
 		_ = kit.LogErrorf(ctx, "unexpected response code, got %d with body %s", res.StatusCode, string(body))
 		return nil, kit.NewJSONStatusResponse(Error{"remote error encountered"}, http.StatusInternalServerError)
@@ -84,19 +80,17 @@ func (s *SomeServer) EmployeeEndpoint(ctx context.Context, req interface{}) (int
 		return nil, kit.NewJSONStatusResponse(Error{err.Error()}, http.StatusInternalServerError)
 	}
 
-	age, err := strconv.Atoi(remote.Data.EmployeeAge)
-	if err != nil {
-		_ = kit.LogErrorf(ctx, "error parsing age, result: %+v", remote)
-		return nil, kit.NewJSONStatusResponse(Error{err.Error()}, http.StatusInternalServerError)
+	if remote.Data == nil {
+		return nil, kit.NewJSONStatusResponse(Error{"employee not found"}, http.StatusNotFound)
 	}
 
 	ret := Employee{
-		ID:   remote.Data.ID,
+		ID:   strconv.Itoa(remote.Data.ID),
 		Name: remote.Data.EmployeeName,
-		Age:  age,
+		Age:  remote.Data.EmployeeAge,
 	}
 
-	birthYear := time.Now().Year() - age
+	birthYear := time.Now().Year() - remote.Data.EmployeeAge
 
 	// this is gonna -suck- test test, so it probably won't happen
 	if birthYear <= 1924 {

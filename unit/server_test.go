@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/NYTimes/gizmo/server/kit"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/NYTimes/gizmo/server/kit"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestEmployeeEndpoint_ErrorFetchingEmployee(t *testing.T) {

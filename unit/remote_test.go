@@ -18,7 +18,7 @@ func TestRemoteEmployeeFetcher_HttpError(t *testing.T) {
 	ts.Close()
 
 	testInstance := NewRemoteEmployeeFetcher(ts.URL)
-	_, err := testInstance.FetchEmployee(testutil.NewTestContext(),1)
+	_, err := testInstance.FetchEmployee(testutil.NewTestContext(), 1)
 	asserter.Error(err) // message will contain a random port so not gonna fuss with matching exact error
 }
 
@@ -28,12 +28,14 @@ func TestRemoteEmployeeFetcher_NotFound(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		asserter.Equal("/api/v1/employee/1", r.RequestURI)
-		w.WriteHeader(http.StatusUnauthorized)
+		bytes, err := ioutil.ReadFile("fixture/remote_employee_not_found.json")
+		asserter.NoError(err)
+		_, _ = w.Write(bytes)
 	}))
 	defer ts.Close()
 
 	testInstance := NewRemoteEmployeeFetcher(ts.URL)
-	res, err := testInstance.FetchEmployee(testutil.NewTestContext(),1)
+	res, err := testInstance.FetchEmployee(testutil.NewTestContext(), 1)
 	asserter.NoError(err)
 	asserter.Nil(res)
 }
@@ -50,7 +52,7 @@ func TestRemoteEmployeeFetcher_Non200(t *testing.T) {
 	defer ts.Close()
 
 	testInstance := NewRemoteEmployeeFetcher(ts.URL)
-	res, err := testInstance.FetchEmployee(testutil.NewTestContext(),1)
+	res, err := testInstance.FetchEmployee(testutil.NewTestContext(), 1)
 	asserter.EqualError(err, "unexpected response code, got 500 with body stuff went terribly wrong")
 	asserter.Nil(res)
 }
@@ -66,7 +68,7 @@ func TestRemoteEmployeeFetcher_GarbageRendered(t *testing.T) {
 	defer ts.Close()
 
 	testInstance := NewRemoteEmployeeFetcher(ts.URL)
-	res, err := testInstance.FetchEmployee(testutil.NewTestContext(),1)
+	res, err := testInstance.FetchEmployee(testutil.NewTestContext(), 1)
 	asserter.Error(err)
 	asserter.Nil(res)
 }
@@ -84,21 +86,21 @@ func TestRemoteEmployeeFetcher_HappyPath(t *testing.T) {
 	defer ts.Close()
 
 	testInstance := NewRemoteEmployeeFetcher(ts.URL)
-	res, err := testInstance.FetchEmployee(testutil.NewTestContext(),1)
+	res, err := testInstance.FetchEmployee(testutil.NewTestContext(), 1)
 	asserter.NoError(err)
 	asserter.Equal(&RemoteEmployee{
 		Status: "success",
-		Data: struct {
-			ID             string `json:"id"`
+		Data: &struct {
+			ID             int    `json:"id"`
 			EmployeeName   string `json:"employee_name"`
-			EmployeeSalary string `json:"employee_salary"`
-			EmployeeAge    string `json:"employee_age"`
+			EmployeeSalary int    `json:"employee_salary"`
+			EmployeeAge    int    `json:"employee_age"`
 			ProfileImage   string `json:"profile_image"`
 		}{
-			ID:             "1",
+			ID:             1,
 			EmployeeName:   "Tiger Nixon",
-			EmployeeSalary: "320800",
-			EmployeeAge:    "61",
+			EmployeeSalary: 320800,
+			EmployeeAge:    61,
 			ProfileImage:   "",
 		},
 	}, res)

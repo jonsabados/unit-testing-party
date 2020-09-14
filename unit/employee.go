@@ -19,11 +19,11 @@ const (
 
 type RemoteEmployee struct {
 	Status string `json:"status"`
-	Data   struct {
-		ID             string `json:"id"`
+	Data   *struct {
+		ID             int    `json:"id"`
 		EmployeeName   string `json:"employee_name"`
-		EmployeeSalary string `json:"employee_salary"`
-		EmployeeAge    string `json:"employee_age"`
+		EmployeeSalary int    `json:"employee_salary"`
+		EmployeeAge    int    `json:"employee_age"`
 		ProfileImage   string `json:"profile_image"`
 	} `json:"data"`
 }
@@ -55,7 +55,7 @@ func MapBirthYear(birthYear int) Generation {
 	}
 }
 
-type EmployeeConverter func (employee *RemoteEmployee) (*Employee, error)
+type EmployeeConverter func(employee *RemoteEmployee) (*Employee, error)
 
 // Using a higher order function to produce a type that is just a function might be overkill in this case, could just
 // as easily have a ConvertEmployee function that calls MapBirthYear. But, this higher order function technique is
@@ -66,17 +66,13 @@ type EmployeeConverter func (employee *RemoteEmployee) (*Employee, error)
 // things where a struct might be used for dependencies but there is no state and only a single function (nix the struct,
 // just pass around a function created by another function who has the dependency in scope).
 func NewEmployeeFactory(mapBirthYear func(birthYear int) Generation) EmployeeConverter {
-	return func(employee *RemoteEmployee)  (*Employee, error) {
-		age, err := strconv.Atoi(employee.Data.EmployeeAge)
-		if err != nil {
-			return nil, err
-		}
-		birthYear := time.Now().Year() - age
+	return func(employee *RemoteEmployee) (*Employee, error) {
+		birthYear := time.Now().Year() - employee.Data.EmployeeAge
 
 		return &Employee{
-			ID:         employee.Data.ID,
+			ID:         strconv.Itoa(employee.Data.ID),
 			Name:       employee.Data.EmployeeName,
-			Age:        age,
+			Age:        employee.Data.EmployeeAge,
 			Generation: mapBirthYear(birthYear),
 		}, nil
 	}

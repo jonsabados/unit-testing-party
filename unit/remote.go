@@ -37,11 +37,8 @@ func (r *restEmployeeFetcher) FetchEmployee(ctx context.Context, employeeID int)
 		return nil, errors.WithStack(err)
 	}
 	defer res.Body.Close()
-	// 401 seems to be the response code from restapiexample for not found, wtf but OK
-	if res.StatusCode == http.StatusUnauthorized {
-		_, _ = ioutil.ReadAll(res.Body)
-		return nil, nil
-	} else if res.StatusCode != http.StatusOK {
+
+	if res.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(res.Body)
 		return nil, errors.New(fmt.Sprintf("unexpected response code, got %d with body %s", res.StatusCode, string(body)))
 	}
@@ -50,6 +47,9 @@ func (r *restEmployeeFetcher) FetchEmployee(ctx context.Context, employeeID int)
 	err = json.NewDecoder(res.Body).Decode(remote)
 	if err != nil {
 		return nil, errors.WithStack(err)
+	}
+	if remote.Data == nil {
+		return nil, nil
 	}
 	return remote, nil
 }
